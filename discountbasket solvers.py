@@ -21,7 +21,17 @@ def calculate_least_wastage(basket_item_values, discounts, order_of_discounts=No
             
     total_discount_matrix[total_discount_matrix < 0] = 0
     
-    total_discount_matrix -= item_values_matrix
+    #prioritize percents if a fixed does not use up all of a discount
+    is_fixed = [i[1] == 'fixed' for i in discounts]
+    does_not_overshoot = np.apply_along_axis(lambda x: (x > 0).any(), 1, total_discount_matrix)
+    
+    ignore = [all([is_fixed[i], does_not_overshoot[i]]) for i in range(len(discounts))]
+    
+    if any(ignore):
+        total_discount_matrix[ignore, :] = 0
+        total_discount_matrix[[not i for i in ignore], :] -= item_values_matrix[[not i for i in ignore], :] 
+    else:
+        total_discount_matrix -= item_values_matrix
     
     difference_matrix = np.apply_along_axis(lambda x: x - x[0], 1, total_discount_matrix)
     
@@ -57,29 +67,12 @@ basket_item_values_ = [24.0, 20.0]
 discounts_ = [(22, 'fixed'), (0.9, 'percent')]
 
 calculate_least_wastage(basket_item_values_, discounts_)
-    
 
-basket_item_values_ = [10.0, 20.0, 30.0]
-discounts_ = [(14, 'fixed'), (22, 'fixed'),  (0.7, 'percent')]
-
-calculate_least_wastage(basket_item_values_, discounts_)
-
-
-basket_item_values_ = [4.0, 20.0, 30.0]
-discounts_ = [(14, 'fixed'), (2, 'fixed'),  (0.3, 'percent')]
-
-calculate_least_wastage(basket_item_values_, discounts_)
-
-basket_item_values_ = [30.0, 20.0, 4.0]
-discounts_ = [(14, 'fixed'), (2, 'fixed'),  (0.3, 'percent')]
-
-calculate_least_wastage(basket_item_values_, discounts_)
-    
 basket_item_values_ = [90.0, 20.0, 4.0]
-discounts_ = [(99, 'fixed'), (32, 'fixed'),  (0.9, 'percent')]
+discounts_ = [(72, 'fixed'), (13, 'fixed'),  (0.5, 'percent'),  (0.5, 'percent'),  (0.5, 'percent')]
 
 calculate_least_wastage(basket_item_values_, discounts_)
-    
+       
     
             
        
